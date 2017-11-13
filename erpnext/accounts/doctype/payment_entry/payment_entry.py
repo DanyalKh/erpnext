@@ -8,6 +8,7 @@ from frappe import _, scrub, ValidationError
 from frappe.utils import flt, comma_or, nowdate
 from erpnext.accounts.utils import get_outstanding_invoices, get_account_currency, get_balance_on
 from erpnext.accounts.party import get_party_account
+from frappe.core.doctype.transactionlog.transactionlog import create_transaction_log
 from erpnext.accounts.doctype.journal_entry.journal_entry \
 	import get_average_exchange_rate, get_default_bank_cash_account
 from erpnext.setup.utils import get_exchange_rate
@@ -58,6 +59,30 @@ class PaymentEntry(AccountsController):
 		self.make_gl_entries()
 		self.update_advance_paid()
 		self.update_expense_claim()
+		self.createTransaction_log()
+
+	def createTransaction_log(self):
+
+		data = ({'self.allocate_payment_amount': self.allocate_payment_amount, 'self.amended_from': self.amended_from,
+				 'self.base_paid_amount': self.base_paid_amount,
+				 'self.base_received_amount': self.base_received_amount,
+				 'self.base_total_allocated_amount': self.base_total_allocated_amount, 'self.company': self.company,
+				 'self.company_currency': self.company_currency, 'self.creation': self.creation,
+				 'self.difference_amount': self.difference_amount, 'self.doctype': self.doctype,
+				 'self.mode_of_payment': self.mode_of_payment, 'self.modified': self.modified,
+				 'self.modified_by': self.modified_by, 'self.name': self.name, 'self.owner': self.owner,
+				 'self.paid_amount': self.paid_amount, 'self.paid_from_account_balance': self.paid_from_account_balance,
+				 'self.paid_from_account_currency': self.paid_from_account_currency,
+				 'self.paid_to': self.paid_to, 'self.paid_to_account_balance': self.paid_to_account_balance,
+				 'self.paid_to_account_currency': self.paid_to_account_currency,
+				 'self.party': self.party, 'self.party_account': self.party_account,
+				 'self.party_balance': self.party_balance, 'self.party_name': self.party_name,
+				 'self.party_type': self.party_type, 'self.payment_type': self.payment_type,
+				 'self.posting_date': self.posting_date, 'self.received_amount': self.received_amount,
+				 'self.remarks': self.remarks, 'self.total_allocated_amount': self.total_allocated_amount})
+
+		doc = self.name
+		create_transaction_log(self.doctype, doc, data)
 
 	def on_cancel(self):
 		self.setup_party_account_field()

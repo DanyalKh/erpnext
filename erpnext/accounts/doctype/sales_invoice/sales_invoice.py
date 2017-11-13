@@ -10,13 +10,12 @@ from erpnext.accounts.party import get_party_account, get_due_date
 from erpnext.controllers.stock_controller import update_gl_entries_after
 from frappe.model.mapper import get_mapped_doc
 from erpnext.accounts.doctype.sales_invoice.pos import update_multi_mode_option
-
+from frappe.core.doctype.transactionlog.transactionlog import create_transaction_log
 from erpnext.controllers.selling_controller import SellingController
 from erpnext.accounts.utils import get_account_currency
 from erpnext.stock.doctype.delivery_note.delivery_note import update_billed_amount_based_on_so
 from erpnext.projects.doctype.timesheet.timesheet import get_projectwise_timesheet_data
-from erpnext.accounts.doctype.asset.depreciation \
-	import get_disposal_account_and_cost_center, get_gl_entries_on_asset_disposal
+from erpnext.accounts.doctype.asset.depreciation import get_disposal_account_and_cost_center, get_gl_entries_on_asset_disposal
 from erpnext.stock.doctype.batch.batch import set_batch_nos
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos, get_delivery_note_serial_no
 from erpnext.setup.doctype.company.company import update_company_current_month_sales
@@ -143,6 +142,31 @@ class SalesInvoice(SellingController):
 		self.update_time_sheet(self.name)
 
 		self.update_current_month_sales()
+		self.createTransact_log()
+
+	def createTransact_log(self):
+		import json
+		data = ({'self.account_for_change_amount': self.account_for_change_amount,
+				 'self.against_income_account': self.against_income_account,
+				 'self.base_grand_total': self.base_grand_total, 'self.base_in_words': self.base_in_words,
+				 'self.base_net_total': self.base_net_total,
+				 'self.base_paid_amount': self.base_paid_amount, 'self.base_rounded_total': self.base_rounded_total,
+				 'self.company': self.company,
+				 'self.company_currency': self.company_currency, 'self.company_address': self.company_address,
+				 'self.contact_email': self.contact_email,
+				 'self.contact_mobile': self.contact_mobile, 'self.customer': self.customer,
+				 'self.customer_address': self.customer_address,
+				 'self.debit_to': self.debit_to, 'self.discount_amount': self.discount_amount,
+				 'self.grand_total': self.grand_total,
+				 'self.in_words': self.in_words, 'self.name': self.name, 'self.net_total': self.net_total,
+				 'self.paid_amount': self.paid_amount,
+				 'self.posting_date': self.posting_date, 'self.posting_time': self.posting_time,
+				 'self.status': self.status, 'self.territory': self.territory})
+
+		doc = self.name
+		DATA = json.dumps(data)
+		create_transaction_log(self.doctype, doc, DATA)
+
 
 	def validate_pos_paid_amount(self):
 		if len(self.payments) == 0 and self.is_pos:
