@@ -82,7 +82,8 @@ class PaymentEntry(AccountsController):
 				 'self.remarks': self.remarks, 'self.total_allocated_amount': self.total_allocated_amount})
 
 		doc = self.name
-		create_transaction_log(self.doctype, doc, data)
+		DATA = json.dumps(data)
+		create_transaction_log(self.doctype, doc, DATA)
 
 	def on_cancel(self):
 		self.setup_party_account_field()
