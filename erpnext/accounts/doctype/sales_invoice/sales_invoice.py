@@ -161,7 +161,7 @@ class SalesInvoice(SellingController):
 				 'self.in_words': self.in_words, 'self.name': self.name, 'self.net_total': self.net_total,
 				 'self.paid_amount': self.paid_amount,
 				 'self.posting_date': self.posting_date, 'self.posting_time': self.posting_time,
-				 'self.status': self.status, 'self.territory': self.territory})
+				 'self.status': self.status, 'self.territory': self.territory, 'self.total_taxes_and_charges':self.total_taxes_and_charges})
 
 		doc = self.name
 		DATA = json.dumps(data)
