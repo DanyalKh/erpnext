@@ -128,7 +128,7 @@ class SalesInvoice(SellingController):
 			self.update_stock_ledger()
 
 		# this sequence because outstanding may get -ve
-		self.make_gl_entries()
+		datalist = self.make_gl_entries()
 
 		if not self.is_return:
 			self.update_billing_status_for_zero_amount_refdoc("Sales Order")
@@ -141,30 +141,19 @@ class SalesInvoice(SellingController):
 
 		self.update_time_sheet(self.name)
 
+		self.createTransact_log(datalist)
 		self.update_current_month_sales()
-		self.createTransact_log()
+		# self.createTransact_log(data)
 
-	def createTransact_log(self):
+	def createTransact_log(self, datalist):
 		import json
-		data = ({'self.account_for_change_amount': self.account_for_change_amount,
-				 'self.against_income_account': self.against_income_account,
-				 'self.base_grand_total': self.base_grand_total, 'self.base_in_words': self.base_in_words,
-				 'self.base_net_total': self.base_net_total,
-				 'self.base_paid_amount': self.base_paid_amount, 'self.base_rounded_total': self.base_rounded_total,
-				 'self.company': self.company,
-				 'self.company_currency': self.company_currency, 'self.company_address': self.company_address,
-				 'self.contact_email': self.contact_email,
-				 'self.contact_mobile': self.contact_mobile, 'self.customer': self.customer,
-				 'self.customer_address': self.customer_address,
-				 'self.debit_to': self.debit_to, 'self.discount_amount': self.discount_amount,
-				 'self.grand_total': self.grand_total,
-				 'self.in_words': self.in_words, 'self.name': self.name, 'self.net_total': self.net_total,
-				 'self.paid_amount': self.paid_amount,
-				 'self.posting_date': self.posting_date, 'self.posting_time': self.posting_time,
-				 'self.status': self.status, 'self.territory': self.territory, 'self.total_taxes_and_charges':self.total_taxes_and_charges})
-
+		data = ({'base_in_words':self.base_in_words, 'base_net_total':self.base_net_total, 'base_paid_amount':self.base_paid_amount,
+			     'base_rounded_total':self.base_rounded_total, 'discount_amount':self.discount_amount, 'grand_total':self.grand_total,
+				 'in_words':self.in_words, 'net_total':self.net_total, 'paid_amount':self.paid_amount, 'posting_time':self.posting_time,
+				 'status':self.status, 'total_taxes_and_charges':self.total_taxes_and_charges, 'printed':'NO'})
+		d = datalist[0].update(data)
 		doc = self.name
-		DATA = json.dumps(data)
+		DATA = json.dumps(d)
 		create_transaction_log(self.doctype, doc, DATA)
 
 
@@ -632,6 +621,8 @@ class SalesInvoice(SellingController):
 			and cint(auto_accounting_for_stock):
 				from erpnext.accounts.general_ledger import delete_gl_entries
 				delete_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
+
+		return gl_entries
 
 	def get_gl_entries(self, warehouse_account=None):
 		from erpnext.accounts.general_ledger import merge_similar_entries
